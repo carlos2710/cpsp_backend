@@ -20,36 +20,46 @@ public class ValidarIngresoUseCaseImpl implements ValidarIngresoUseCase {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public Optional<Integer> execute (AccesoRequest accesoRequest){
+    public UsuarioAcceso execute (AccesoRequest accesoRequest){
         if (accesoRequest.userName() == null ||
                 accesoRequest.userName().isBlank() ||
                 accesoRequest.password() == null ||
                 accesoRequest.password().isBlank()){
-            return Optional.empty();
+            return null;
         }
 
         Optional<UsuarioAcceso> resultado =
                 accesoRepositoryPort.validarCredenciales(accesoRequest.userName());
 
         if (resultado.isEmpty()){
-            return Optional.empty();
+            return null;
         }
 
         UsuarioAcceso usuarioAcceso = resultado.get();
 
         if(!Integer.valueOf(1).equals(usuarioAcceso.estado())){
-            return Optional.empty();
+            return null;
         }
 
         if(!Integer.valueOf(0).equals(usuarioAcceso.marca())){
-            return Optional.empty();
+            return null;
         }
 
         if(usuarioAcceso.passwordHash() == null ||
                 !passwordEncoder.matches(accesoRequest.password(),usuarioAcceso.passwordHash())){
-            return Optional.empty();
+            return null;
         }
 
-        return Optional.of(usuarioAcceso.idUsuario());
+
+        return new UsuarioAcceso(
+                usuarioAcceso.idUsuario(),
+                usuarioAcceso.userName(),
+                null,
+                usuarioAcceso.estado(),
+                usuarioAcceso.marca(),
+                usuarioAcceso.codLocal(),
+                usuarioAcceso.codEmpresa(),
+                usuarioAcceso.codPerfil()
+        );
     }
 }

@@ -5,6 +5,9 @@ public record UsuarioAcceso(
         String userName,
         String passwordHash,
         Integer estado,
-        Integer marca
+        Integer marca,
+        Integer codLocal,
+        Integer codEmpresa,
+        Integer codPerfil
 ) {
 }

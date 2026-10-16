@@ -6,5 +6,5 @@ import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.request.
 import java.util.Optional;
 
 public interface ValidarIngresoUseCase {
-    Optional<Integer> execute(AccesoRequest request);
+    UsuarioAcceso execute(AccesoRequest request);
 }

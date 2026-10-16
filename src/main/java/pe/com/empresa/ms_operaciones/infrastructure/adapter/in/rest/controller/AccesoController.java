@@ -10,10 +10,13 @@ import org.springframework.web.bind.annotation.RestController;
 import pe.com.empresa.ms_operaciones.application.port.in.ObtenerLocalesUseCase;
 import pe.com.empresa.ms_operaciones.application.port.in.ValidarIngresoUseCase;
 import pe.com.empresa.ms_operaciones.domain.model.UsuarioAcceso;
+import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.request.AccesoLocalRequest;
 import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.request.AccesoRequest;
+import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.response.AccesoLoginResponse;
 import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.response.AccesoResponse;
 import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.response.ApiResponse;
 import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.response.SolicitudResponse;
+import pe.com.empresa.ms_operaciones.infrastructure.security.JwtService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,12 +32,15 @@ public class AccesoController {
 
     private final ValidarIngresoUseCase validarIngresoUseCase;
     private final ObtenerLocalesUseCase obtenerLocalesUseCase;
+    private final JwtService jwtService;
 
     public AccesoController(
             ValidarIngresoUseCase validarIngresoUseCase,
-            ObtenerLocalesUseCase obtenerLocalesUseCase) {
+            ObtenerLocalesUseCase obtenerLocalesUseCase,
+            JwtService jwtService) {
         this.validarIngresoUseCase = validarIngresoUseCase;
         this.obtenerLocalesUseCase = obtenerLocalesUseCase;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("")
@@ -42,12 +48,24 @@ public class AccesoController {
             summary = "Verificar estado del microservicio",
             description = "Permite verificar que el microservicio se encuentra disponible"
     )
-    public ResponseEntity<Optional<Integer>> ValidarIngreso(
+    public ResponseEntity<AccesoLoginResponse> ValidarIngreso(
             @RequestBody AccesoRequest request
             ){
-        Optional<Integer> valido = validarIngresoUseCase.execute(request);
+        UsuarioAcceso valido = validarIngresoUseCase.execute(request);
 
-        return ResponseEntity.ok(valido);
+        String token = jwtService.generarToken(
+                valido.userName(),
+                valido.codLocal(),
+                valido.codEmpresa(),
+                valido.codPerfil());
+
+        AccesoLoginResponse response = new AccesoLoginResponse(
+                valido,
+                token,
+                "Bearer",
+                1800L
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/locales")
@@ -56,10 +74,10 @@ public class AccesoController {
             description = "Permite obtener el listado de locales que tienen asignado un Usuario"
     )
     public ResponseEntity<List<AccesoResponse>> ObtenerLocales(
-            @RequestBody Integer idUsuario
-    ){
+            @RequestBody AccesoLocalRequest accesoLocalRequest
+            ){
 
-        List<AccesoResponse> listAcceso = obtenerLocalesUseCase.execute(idUsuario);
+        List<AccesoResponse> listAcceso = obtenerLocalesUseCase.execute(accesoLocalRequest.idUsuario());
 
         return ResponseEntity.ok(listAcceso);
 

@@ -58,7 +58,10 @@ public class AccesoRepositoryAdapter  implements AccesoRepositoryPort {
                 rs.getString("usu_usuario"),
                 rs.getString("usu_clave"),
                 rs.getInt("usu_estado"),
-                rs.getInt("usu_marca")
+                rs.getInt("usu_marca"),
+                rs.getInt("usu_codlocal"),
+                rs.getInt("usu_codempresa"),
+                rs.getInt("usu_codperfil")
         );
     }
 
