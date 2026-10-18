@@ -2,11 +2,14 @@ package pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pe.com.empresa.ms_operaciones.application.port.in.BuscarDniReniecUseCase;
+import pe.com.empresa.ms_operaciones.domain.model.DniReniec;
+import pe.com.empresa.ms_operaciones.domain.model.DniReniecConsulta;
 import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.request.SolicitudRequest;
 import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.response.ApiResponse;
+import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.response.BuscarDniReniecResponse;
 import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.response.SolicitudResponse;
 
 import java.util.ArrayList;
@@ -20,6 +23,29 @@ import java.util.concurrent.ThreadPoolExecutor;
         description = "Endpoints relacionados con las solicitudes del sistema"
 )
 public class SolicitudController {
+    private final BuscarDniReniecUseCase buscarDniReniecUseCase;
+
+    public SolicitudController(BuscarDniReniecUseCase buscarDniReniecUseCase) {
+        this.buscarDniReniecUseCase = buscarDniReniecUseCase;
+    }
+
+    @GetMapping("/BuscarDNI-Reniec/{nroDNI}")
+    @Operation(
+            operationId = "buscarDniReniec",
+            summary = "Buscar DNI en RENIEC",
+            description = "Consulta los datos de identidad y dirección asociados a un DNI"
+    )
+    public ResponseEntity<BuscarDniReniecResponse> toResponse(
+            @PathVariable String nroDNI
+    ) {
+        DniReniecConsulta resultado = buscarDniReniecUseCase.buscar(nroDNI);
+        return ResponseEntity.ok(new BuscarDniReniecResponse(
+                resultado.success(),
+                resultado.message(),
+                toDataResponse(resultado.data())
+        ));
+    }
+
     @GetMapping("")
     @Operation(
             summary = "Verificar estado del microservicio",
@@ -137,6 +163,28 @@ public class SolicitudController {
                 new SolicitudResponse.EstadoSolicitud(
                         "", "", null, null, "", ""
                 )
+        );
+    }
+
+    private BuscarDniReniecResponse.Data toDataResponse(DniReniec data) {
+        if (data == null) {
+            return null;
+        }
+        return new BuscarDniReniecResponse.Data(
+                data.numero(),
+                data.nombreCompleto(),
+                data.nombres(),
+                data.apellidoPaterno(),
+                data.apellidoMaterno(),
+                data.codigoVerificacion(),
+                data.direccion(),
+                data.direccionCompleta(),
+                data.departamento(),
+                data.provincia(),
+                data.distrito(),
+                data.ubigeoReniec(),
+                data.ubigeoSunat(),
+                data.ubigeo()
         );
     }
 }

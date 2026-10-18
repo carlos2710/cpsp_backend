@@ -391,7 +391,10 @@ DB_URL
 DB_USERNAME
 DB_PASSWORD
 KAFKA_BOOTSTRAP_SERVERS
+APIPERU_DNI_TOKEN
 ```
+
+El endpoint `GET /api/v1/solicitud/BuscarDNI-Reniec/{nroDNI}` consume el servicio DNI de API Perú. Configura `APIPERU_DNI_TOKEN` en el entorno del backend (por ejemplo, en la configuración de variables de la aplicación de Azure). Opcionalmente, puedes cambiar la URL con `APIPERU_DNI_URL`.
 
 ---
 
