@@ -22,7 +22,7 @@ public class ApiPeruDniReniecAdapter implements ConsultarDniReniecPort {
     private final String token;
 
     public ApiPeruDniReniecAdapter(
-            @Value("${apiperu.dni-direccion.url}") String endpoint,
+            @Value("${apiperu.dni-direccion.url:https://api.apiperu.pe/dni-direccion}") String endpoint,
             @Value("${apiperu.dni-direccion.token:}") String token
     ) {
         this.restClient = RestClient.create();
