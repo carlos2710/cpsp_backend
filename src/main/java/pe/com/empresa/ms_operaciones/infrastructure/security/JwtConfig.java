@@ -17,11 +17,22 @@ public class JwtConfig {
     @Bean
     public SecretKey jwtSecretKey(
             @Value("${app.jwt.secret-base64}") String secretBase64){
-        byte[] keyBytes = Base64.getDecoder().decode(secretBase64);
+        if (secretBase64 == null || secretBase64.isBlank()) {
+            throw new IllegalStateException(
+                    "Debe configurar JWT_SECRET_BASE64 con una clave Base64 de al menos 32 bytes.");
+        }
+
+        byte[] keyBytes;
+        try {
+            keyBytes = Base64.getDecoder().decode(secretBase64);
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException(
+                    "JWT_SECRET_BASE64 no contiene un valor Base64 válido.", exception);
+        }
 
         if (keyBytes.length < 32) {
             throw new IllegalArgumentException(
-                    "La clave JWT debe tener al menos 32 bytes");
+                    "JWT_SECRET_BASE64 debe decodificar a 32 bytes como mínimo.");
         }
 
         return new SecretKeySpec(keyBytes, "HmacSHA256");

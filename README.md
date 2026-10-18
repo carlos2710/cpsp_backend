@@ -392,7 +392,10 @@ DB_USERNAME
 DB_PASSWORD
 KAFKA_BOOTSTRAP_SERVERS
 APIPERU_DNI_TOKEN
+JWT_SECRET_BASE64
 ```
+
+`JWT_SECRET_BASE64` debe ser una clave Base64 que al decodificarse tenga al menos 32 bytes. Configúrala en el entorno de ejecución de Azure App Service y conserva el mismo valor entre reinicios y despliegues.
 
 El endpoint `GET /api/v1/solicitud/BuscarDNI-Reniec/{nroDNI}` consume el servicio DNI de API Perú. Configura `APIPERU_DNI_TOKEN` en el entorno del backend (por ejemplo, en la configuración de variables de la aplicación de Azure). Opcionalmente, puedes cambiar la URL con `APIPERU_DNI_URL`.
 
