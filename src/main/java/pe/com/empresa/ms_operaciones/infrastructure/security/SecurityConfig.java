@@ -53,7 +53,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of("http://localhost:4200")
+                List.of(
+                        "http://localhost:4200",
+                        "https://cpsp-gestion-front-fvayhfgphdaqbxbw.southeastasia-01.azurewebsites.net"
+                )
         );
 
         configuration.setAllowedMethods(
