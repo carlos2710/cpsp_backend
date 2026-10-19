@@ -1,6 +1,8 @@
 package pe.com.empresa.ms_operaciones.infrastructure.adapter.out.service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -8,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 import pe.com.empresa.ms_operaciones.application.port.out.ConsultarDniReniecPort;
 import pe.com.empresa.ms_operaciones.domain.model.DniReniec;
@@ -17,6 +20,8 @@ import java.util.List;
 
 @Component
 public class ApiPeruDniReniecAdapter implements ConsultarDniReniecPort {
+    private static final Logger log = LoggerFactory.getLogger(ApiPeruDniReniecAdapter.class);
+
     private final RestClient restClient;
     private final String endpoint;
     private final String token;
@@ -48,7 +53,16 @@ public class ApiPeruDniReniecAdapter implements ConsultarDniReniecPort {
                     .body(new ApiPeruDniRequest(dni))
                     .retrieve()
                     .body(ApiPeruResponse.class);
+        } catch (RestClientResponseException exception) {
+            log.error("API Perú respondió con HTTP {} al consultar DNI.",
+                    exception.getStatusCode().value());
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "El servicio RENIEC rechazó o no pudo procesar la consulta.",
+                    exception
+            );
         } catch (RestClientException exception) {
+            log.error("Error de comunicación con el servicio RENIEC.", exception);
             throw new ResponseStatusException(
                     HttpStatus.BAD_GATEWAY,
                     "No se pudo completar la consulta al servicio RENIEC.",
