@@ -371,26 +371,11 @@ Las configuraciones sensibles no deben almacenarse directamente en el repositori
 
 Se utilizarán variables de entorno.
 
-Ejemplo:
-
-```yaml
-spring:
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-```
-
-Variables esperadas:
+Variables de entorno:
 
 ```text
-DB_URL
-DB_USERNAME
-DB_PASSWORD
-KAFKA_BOOTSTRAP_SERVERS
+SPRING_PROFILES_ACTIVE
+DB_URL (opcional, tiene un valor predeterminado por perfil)
 APIPERU_DNI_TOKEN
 JWT_SECRET_BASE64
 ```
@@ -401,28 +386,25 @@ El endpoint `GET /api/v1/solicitud/BuscarDNI-Reniec/{nroDNI}` consume el servici
 
 ---
 
-# 🌎 Perfiles
+# 🌎 Perfiles de ejecución
 
-Se recomienda trabajar inicialmente con los siguientes perfiles:
+El perfil predeterminado es `dev`, que conecta a Azure SQL con `ActiveDirectoryDefault` y las credenciales de Azure disponibles en el equipo local. Para ejecutarlo explícitamente en Windows:
 
-```text
-local
-dev
-qa
-prod
+```powershell
+$env:SPRING_PROFILES_ACTIVE = "dev"
+./mvnw.cmd spring-boot:run
 ```
 
-Ejemplo:
+En Azure App Service configura `SPRING_PROFILES_ACTIVE=prod`. El perfil `prod` usa `ActiveDirectoryManagedIdentity`; no requiere usuario ni contraseña SQL. Configura también `DB_URL` solo si el servidor o la base de datos difieren del valor predeterminado.
 
-```bash
-./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+La identidad administrada del App Service debe estar habilitada y creada como usuario en la base `sistemasCPSP`. Un administrador de Microsoft Entra para Azure SQL puede otorgarle ejecución sobre los procedimientos almacenados del esquema `dbo` con:
+
+```sql
+CREATE USER [cpsp-backend] FROM EXTERNAL PROVIDER;
+GRANT EXECUTE ON SCHEMA::dbo TO [cpsp-backend];
 ```
 
-En Windows:
-
-```cmd
-mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
-```
+El usuario debe ejecutar el script una sola vez con permisos administrativos sobre la base de datos.
 
 ---
 
