@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/logeo").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/health/database").permitAll()
                         .requestMatchers(
                                 "/api/docs/**",
                                 "/swagger-ui/**",
