@@ -3,6 +3,9 @@ package pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.request
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.AssertTrue;
+
+import java.util.List;
 
 public record UsuarioRequest (
         Integer idUsuario,
@@ -29,11 +32,14 @@ public record UsuarioRequest (
         @Email
         String email,
 
-        @NotNull
         Long local,
+
+        List<Long> locales,
 
         @NotNull
         Long perfil,
+
+        Long codigoEmpresa,
 
         @NotNull
         Integer tipoUsuario,
@@ -44,5 +50,10 @@ public record UsuarioRequest (
         @NotBlank
         String clave
 ){
+
+    @AssertTrue(message = "Debe asignar al menos un local.")
+    public boolean isLocalSeleccionado() {
+        return local != null || (locales != null && !locales.isEmpty());
+    }
 
 }

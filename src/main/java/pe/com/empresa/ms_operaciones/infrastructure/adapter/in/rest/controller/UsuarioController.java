@@ -3,11 +3,15 @@ package pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.apache.kafka.common.metrics.internals.IntGaugeSuite;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import pe.com.empresa.ms_operaciones.application.port.in.GuardarUsuarioUseCase;
+import pe.com.empresa.ms_operaciones.domain.model.GuardarUsuario;
 import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.request.UsuarioRequest;
 import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.response.ApiResponse;
+import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.response.ResponseStatus;
 import pe.com.empresa.ms_operaciones.infrastructure.adapter.in.rest.dto.response.UsuarioResponse;
 
 import java.util.ArrayList;
@@ -20,6 +24,11 @@ import java.util.List;
         description = "Endpoints relacionados con las operaciones del sistema"
 )
 public class UsuarioController {
+    private final GuardarUsuarioUseCase guardarUsuarioUseCase;
+
+    public UsuarioController(GuardarUsuarioUseCase guardarUsuarioUseCase) {
+        this.guardarUsuarioUseCase = guardarUsuarioUseCase;
+    }
 
     @GetMapping("")
     @Operation(
@@ -84,19 +93,12 @@ public class UsuarioController {
             description = "Registra un nuevo usuario en el sistema"
     )
     public ResponseEntity<ApiResponse<UsuarioResponse>> GuardarUsuario(
-            @Valid @RequestBody UsuarioRequest request
+            @Valid @RequestBody UsuarioRequest request,
+            Authentication authentication
     ){
-        UsuarioResponse usuario = new UsuarioResponse(
-                1L,
-                "jalvaz",
-                "ADMIN",
-                "Juliana Alva Zapata",
-                "Local Principal",
-                "ACTIVO"
-        );
-        ApiResponse<UsuarioResponse> response = ApiResponse.success(usuario);
-
-        return ResponseEntity.ok(response);
+        Integer codigoUsuario = guardarUsuarioUseCase.execute(toCommand(request, null, authentication));
+        UsuarioResponse usuario = toResponse(codigoUsuario, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(usuario));
     }
 
     @PutMapping("")
@@ -105,19 +107,16 @@ public class UsuarioController {
             description = "Modifica un usuario en el sistema"
     )
     public ResponseEntity<ApiResponse<UsuarioResponse>> ModificarUsuario(
-            @Valid @RequestBody UsuarioRequest request
+            @Valid @RequestBody UsuarioRequest request,
+            Authentication authentication
     ){
-        UsuarioResponse usuario = new UsuarioResponse(
-                1L,
-                "jalvaz",
-                "ADMIN",
-                "Juliana Alva Zapata",
-                "Local Principal",
-                "ACTIVO"
-        );
-        ApiResponse<UsuarioResponse> response = ApiResponse.success(usuario);
-
-        return ResponseEntity.ok(response);
+        if (request.idUsuario() == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(ResponseStatus.BAD_REQUEST));
+        }
+        Integer codigoUsuario = guardarUsuarioUseCase.execute(
+                toCommand(request, request.idUsuario(), authentication));
+        UsuarioResponse usuario = toResponse(codigoUsuario, request);
+        return ResponseEntity.ok(ApiResponse.success(usuario));
     }
 
     @DeleteMapping("/{id}")
@@ -131,6 +130,53 @@ public class UsuarioController {
 
         return ResponseEntity.ok(
                 ApiResponse.success(null)
+        );
+    }
+
+    private GuardarUsuario toCommand(
+            UsuarioRequest request,
+            Integer codigoUsuario,
+            Authentication authentication
+    ) {
+        List<Integer> locales = request.locales() != null && !request.locales().isEmpty()
+                ? request.locales().stream().map(Math::toIntExact).toList()
+                : request.local() == null ? List.of() : List.of(Math.toIntExact(request.local()));
+        return new GuardarUsuario(
+                codigoUsuario,
+                locales,
+                Math.toIntExact(request.perfil()),
+                1,
+                1,
+                request.tipoUsuario(),
+                request.usuario(),
+                request.clave(),
+                1,
+                0,
+                authentication.getName(),
+                1,
+                request.telefono(),
+                request.email(),
+                request.codigoEmpresa() == null ? null : Math.toIntExact(request.codigoEmpresa())
+        );
+    }
+
+    private UsuarioResponse toResponse(Integer codigoUsuario, UsuarioRequest request) {
+        String nombreCompleto = String.join(" ", List.of(
+                request.primerNombre(),
+                request.segundoNombre() == null ? "" : request.segundoNombre(),
+                request.apellidoPaterno(),
+                request.apellidoMaterno()
+        )).replaceAll("\\s+", " ").trim();
+
+        return new UsuarioResponse(
+                codigoUsuario.longValue(),
+                request.usuario(),
+                request.perfil().toString(),
+                nombreCompleto,
+                request.locales() != null && !request.locales().isEmpty()
+                        ? request.locales().stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(", "))
+                        : String.valueOf(request.local()),
+                "ACTIVO"
         );
     }
 
